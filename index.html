@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Location Data Dashboard</h1>
+    <button id="clear-button">Clear Data</button>
+    <button onclick="fetchLocations()">Refresh Data</button>
+    <table id="locations-table">
+        <thead>
+            <tr>
+                <th>Current Latitude</th>
+                <th>Current Longitude</th>
+                <th>Target Latitude</th>
+                <th>Target Longitude</th>
+                <th>Distance (m)</th>
+                <th>Arrived</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        function fetchLocations() {
+            fetch('https://projectar-ebd4b769bbda.herokuapp.com/api/locations')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tableBody = document.getElementById('locations-table').getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // Clear existing data
+
+                    data.forEach(location => {
+                        const row = tableBody.insertRow();
+                        row.insertCell(0).innerText = location.currentLat;
+                        row.insertCell(1).innerText = location.currentLon;
+                        row.insertCell(2).innerText = location.latitude;
+                        row.insertCell(3).innerText = location.longitude;
+                        row.insertCell(4).innerText = location.distance.toFixed(2); // Display distance with two decimals
+                        row.insertCell(5).innerText = location.isArrive ? 'Yes' : 'No'; // Display arrival status
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function clearLocations() {
+            fetch('https://projectar-ebd4b769bbda.herokuapp.com/api/locations', {
+                method: 'DELETE',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.message); // Display message in the console
+                    fetchLocations(); // Refresh the table after clearing data
+                })
+                .catch(error => console.error('Error clearing data:', error));
+        }
+
+        // Fetch locations when the page loads
+        window.onload = function() {
+            fetchLocations(); // Initial fetch
+            setInterval(fetchLocations, 5000); // Polling every 5 seconds
+        };
+
+        // Attach event listener to the clear button
+        document.getElementById('clear-button').addEventListener('click', clearLocations);
+    </script>
+</body>
+</html>
